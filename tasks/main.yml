@@ -1,0 +1,17 @@
+---
+
+- name: Install libvirt
+  yum: name={{item}} state=present
+  with_items:
+    - libvirt
+    - libvirt-client
+    - kvm
+  tags:
+    - install
+    - libvirt
+
+- name: Enable libvirt service
+  service: name=libvirtd state=started enabled=yes
+  tags:
+    - configure
+    - libvirt
