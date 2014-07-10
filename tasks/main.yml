@@ -5,6 +5,7 @@
   with_items:
     - libvirt
     - libvirt-client
+    - libvirt-python
     - kvm
   tags:
     - install
@@ -12,6 +13,47 @@
 
 - name: Enable libvirt service
   service: name=libvirtd state=started enabled=yes
+  tags:
+    - configure
+    - libvirt
+
+- name: Check if the VM is defined
+  shell: virsh net-list --all
+  register: net_registered
+  tags:
+    - configure
+    - libvirt
+
+- name: Set template private network
+  template: src=network.xml.j2 dest=/var/tmp/network.xml
+  when: net_registered.stdout.find('private') == -1
+  tags:
+    - configure
+    - libvirt
+
+- name: Define private network
+  command: /usr/bin/virsh net-define /var/tmp/network.xml
+  when: net_registered.stdout.find('private') == -1
+  tags:
+    - configure
+    - libvirt
+
+- name: Autostart private network
+  command: /usr/bin/virsh net-autostart private
+  tags:
+    - configure
+    - libvirt
+
+- name: Check if the VM is defined
+  shell: virsh net-list
+  register: net_started
+  tags:
+    - configure
+    - libvirt
+
+- name: Start private network
+  command: /usr/bin/virsh net-start private
+  when: net_started.stdout.find('private') == -1
   tags:
     - configure
     - libvirt
